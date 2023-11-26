@@ -134,6 +134,13 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
                 false))
         {
             dbUtility.DeletePerson(personIdToDelete);
+            people.Remove(personToDelete);
+            decimal share = personToDelete.Owes / people.Count;
+            foreach (Person person in people)
+            {
+                person.Owes += share;
+            }
+            dbUtility.UpdatePeopleOwes(people);
         }
 
         return dbUtility.GetPeopleFromDatabase();
