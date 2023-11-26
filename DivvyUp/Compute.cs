@@ -4,14 +4,14 @@ namespace DivvyUp;
 
 public class Compute
 {
-    public static void SplitCosts(List<Person> people)
+    public static void SplitCosts(List<Person>? people)
     {
         Rule rule = new Rule("[red]Compute Costs[/]");
         rule.LeftJustified();
         rule.RuleStyle("silver dim");
         AnsiConsole.Write(rule);
 
-        if (people.Count == 0)
+        if (people?.Count == 0)
         {
             AnsiConsole.MarkupLine("[maroon]Add people to the list first.[/]");
             return;
@@ -24,11 +24,11 @@ public class Compute
             return;
         }
 
-        decimal share = totalCost / people.Count;
+        decimal share = totalCost / people!.Count;
 
         AnsiConsole.MarkupLine("[olive]Costs split evenly:[/]");
 
-        foreach (var person in people)
+        foreach (Person person in people)
         {
             person.Owes += share;
             AnsiConsole.MarkupLine($"[olive]{person.Name}[/]: [green]{share:C}[/]");
