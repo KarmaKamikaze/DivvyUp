@@ -11,7 +11,9 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
         "1. Overview",
         "2. Add Person",
         "3. Split Costs",
-        "4. Exit",
+        "4. Remove Person",
+        "5. Reset",
+        "6. Exit",
     };
 
     public void RunUI()
@@ -22,11 +24,12 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
             new FigletText(font, "DivvyUp")
                 .Centered()
                 .Color(Color.Lime));
+        Console.WriteLine("\n\n");
 
         _running = true;
         while (_running)
         {
-            Console.WriteLine("\n\n\n");
+            Console.WriteLine("\n");
             string choice = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
                     .Title("[olive]Please [green]choose[/] what to do next.[/]")
@@ -51,6 +54,12 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
                 Compute.SplitCosts(people, dbUtility);
                 break;
             case var _ when string.Equals(choice, _menuOptions[3]):
+                people = DeletePerson();
+                break;
+            case var _ when string.Equals(choice, _menuOptions[4]):
+                people = DeleteAllPeople();
+                break;
+            case var _ when string.Equals(choice, _menuOptions[5]):
                 if (AnsiConsole.Confirm("[olive]Are you sure you want to quit?[/]", false))
                 {
                     _running = false;
@@ -73,6 +82,60 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
         string name = AnsiConsole.Ask<string>("[olive]Enter the [green]name[/] of the person:[/]");
         dbUtility.AddPerson(new Person(name));
         AnsiConsole.MarkupLine($"[olive]{name} added to the list.[/]");
+        return dbUtility.GetPeopleFromDatabase();
+    }
+
+    private List<Person> DeleteAllPeople()
+    {
+        dbUtility.DeleteAllPeople();
+        AnsiConsole.MarkupLine("[olive]All people have been [red]removed[/] and DivvyUp has been [lime]reset[/].[/]");
+        return new List<Person>();
+    }
+
+    private List<Person>? DeletePerson()
+    {
+        if (people?.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[maroon]Add people to DivvyUp first.[/]");
+            return null;
+        }
+
+        Rule rule = new Rule("[red]Remove Person[/]");
+        rule.LeftJustified();
+        rule.RuleStyle("silver dim");
+        AnsiConsole.Write(rule);
+
+        Table table = new Table()
+            .Title("Added People")
+            .HeavyEdgeBorder();
+
+        table.AddColumn(new TableColumn("ID"));
+        table.AddColumn(new TableColumn("Name"));
+
+        foreach (TableColumn column in table.Columns)
+        {
+            column.Padding(3, 3).Centered();
+        }
+
+        foreach (Person person in people!)
+        {
+            table.AddRow(new Markup($"[green]{person.Id}[/]"), new Markup($"[olive]{person.Name}[/]"));
+        }
+
+        Console.WriteLine("\n");
+        AnsiConsole.Write(table);
+
+        Console.WriteLine("\n");
+        int personIdToDelete =
+            AnsiConsole.Ask<int>("[olive]Please choose the [green]ID[/] of the person you wish to delete:[/]");
+        Person personToDelete = people.FirstOrDefault(p => p.Id == personIdToDelete)!;
+        if (AnsiConsole.Confirm(
+                $"[olive]Are you sure you want to remove {personToDelete.Name} with ID [[[green]{personToDelete.Id}[/]]]?[/]",
+                false))
+        {
+            dbUtility.DeletePerson(personIdToDelete);
+        }
+
         return dbUtility.GetPeopleFromDatabase();
     }
 
