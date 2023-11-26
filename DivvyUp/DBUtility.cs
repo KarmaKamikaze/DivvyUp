@@ -29,6 +29,7 @@ public class DBUtility
                                             CREATE TABLE IF NOT EXISTS Person (
                                                 ID INTEGER PRIMARY KEY AUTOINCREMENT,
                                                 Name TEXT,
+                                                Paid DECIMAL,
                                                 Owes DECIMAL
                                             )
                                             """;
@@ -56,10 +57,11 @@ public class DBUtility
             connection.Open();
 
             // Insert the new person into the Person table
-            const string insertQuery = "INSERT INTO Person (Name, Owes) VALUES (@Name, @Owes)";
+            const string insertQuery = "INSERT INTO Person (Name, Paid, Owes) VALUES (@Name, @Paid, @Owes)";
 
             using SQLiteCommand insertCommand = new SQLiteCommand(insertQuery, connection);
             insertCommand.Parameters.AddWithValue("@Name", person.Name);
+            insertCommand.Parameters.AddWithValue("@Paid", person.Paid);
             insertCommand.Parameters.AddWithValue("@Owes", person.Owes);
 
             insertCommand.ExecuteNonQuery();
@@ -86,7 +88,7 @@ public class DBUtility
             connection.Open();
 
             // Retrieve all people from the Person table
-            const string selectQuery = "SELECT ID, Name, Owes FROM Person";
+            const string selectQuery = "SELECT ID, Name, Paid, Owes FROM Person";
 
             using SQLiteCommand selectCommand = new SQLiteCommand(selectQuery, connection);
             using SQLiteDataReader reader = selectCommand.ExecuteReader();
@@ -94,9 +96,10 @@ public class DBUtility
             {
                 int id = Convert.ToInt32(reader["ID"]);
                 string name = reader["Name"].ToString()!;
+                decimal paid = Convert.ToDecimal(reader["Paid"]);
                 decimal owes = Convert.ToDecimal(reader["Owes"]);
 
-                Person person = new Person(id, name, owes);
+                Person person = new Person(id, name, paid, owes);
 
                 people.Add(person);
             }
@@ -176,9 +179,10 @@ public class DBUtility
             foreach (Person updatedPerson in people)
             {
                 // Update the Owes attribute for each person in the Person table
-                const string updateQuery = "UPDATE Person SET Owes = @Owes WHERE ID = @ID";
+                const string updateQuery = "UPDATE Person SET Paid = @Paid, Owes = @Owes WHERE ID = @ID";
 
                 using SQLiteCommand updateCommand = new SQLiteCommand(updateQuery, connection, transaction);
+                updateCommand.Parameters.AddWithValue("@Paid", updatedPerson.Paid);
                 updateCommand.Parameters.AddWithValue("@Owes", updatedPerson.Owes);
                 updateCommand.Parameters.AddWithValue("@ID", updatedPerson.Id);
 

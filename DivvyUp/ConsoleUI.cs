@@ -10,10 +10,9 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
     {
         "1. Overview",
         "2. Add Person",
-        "3. Split Costs",
-        "4. Remove Person",
-        "5. Reset",
-        "6. Exit",
+        "3. Remove Person",
+        "4. Reset",
+        "5. Exit",
     };
 
     public void RunUI()
@@ -51,15 +50,12 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
                 people = AddPerson();
                 break;
             case var _ when string.Equals(choice, _menuOptions[2]):
-                Compute.SplitCosts(people, dbUtility);
-                break;
-            case var _ when string.Equals(choice, _menuOptions[3]):
                 people = DeletePerson();
                 break;
-            case var _ when string.Equals(choice, _menuOptions[4]):
+            case var _ when string.Equals(choice, _menuOptions[3]):
                 people = DeleteAllPeople();
                 break;
-            case var _ when string.Equals(choice, _menuOptions[5]):
+            case var _ when string.Equals(choice, _menuOptions[4]):
                 if (AnsiConsole.Confirm("[olive]Are you sure you want to quit?[/]", false))
                 {
                     _running = false;
@@ -80,9 +76,37 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
         rule.RuleStyle("silver dim");
         AnsiConsole.Write(rule);
         string name = AnsiConsole.Ask<string>("[olive]Enter the [green]name[/] of the person:[/]");
-        dbUtility.AddPerson(new Person(name));
+        decimal paidAmount = AnsiConsole.Ask<decimal>("[olive]Enter the [green]amount paid[/] by the person:[/]");
+        dbUtility.AddPerson(new Person(name, paidAmount));
         AnsiConsole.MarkupLine($"[olive]{name} added to the list.[/]");
+        SplitCosts();
         return dbUtility.GetPeopleFromDatabase();
+    }
+
+    private void SplitCosts()
+    {
+        List<Person> owingPeople = dbUtility.GetPeopleFromDatabase()!;
+        if (owingPeople?.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[maroon]Add people to DivvyUp first.[/]");
+            return;
+        }
+
+        decimal totalPaid = 0;
+
+        foreach (Person person in owingPeople!)
+        {
+            totalPaid += person.Paid;
+        }
+
+        decimal share = totalPaid / owingPeople.Count;
+
+        foreach (Person person in owingPeople)
+        {
+            person.Owes = share - person.Paid; // Adjust Owes based on the difference between share and paid
+        }
+
+        dbUtility.UpdatePeopleOwes(owingPeople);
     }
 
     private List<Person> DeleteAllPeople()
@@ -163,7 +187,7 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
             .HeavyEdgeBorder();
 
         table.AddColumn(new TableColumn("Name"));
-        table.AddColumn(new TableColumn("Paid")); // TODO: Implement different paid amounts
+        table.AddColumn(new TableColumn("Paid"));
         table.AddColumn(new TableColumn("Owes"));
 
         foreach (TableColumn column in table.Columns)
@@ -173,8 +197,10 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
 
         foreach (Person person in people!)
         {
-            table.AddRow(new Markup($"[olive]{person.Name}[/]"), new Markup("[green]paid[/]"),
-                new Markup($"[maroon]{person.Owes:C}[/]"));
+            string owedColor = person.Owes < 0 ? "teal" : person.Owes > 0 ? "maroon" : "green";
+
+            table.AddRow(new Markup($"[olive]{person.Name}[/]"), new Markup($"[green]{person.Paid:C}[/]"),
+                new Markup($"[{owedColor}]{person.Owes:C}[/]"));
         }
 
         AnsiConsole.Write(table);
