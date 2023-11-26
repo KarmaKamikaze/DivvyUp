@@ -184,7 +184,8 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
 
         Table table = new Table()
             .Title("DivvyUp Overview")
-            .HeavyEdgeBorder();
+            .HeavyEdgeBorder()
+            .Centered();
 
         table.AddColumn(new TableColumn("Name"));
         table.AddColumn(new TableColumn("Paid"));
@@ -195,7 +196,8 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
             column.Padding(3, 3).Centered();
         }
 
-        foreach (Person person in people!)
+        IOrderedEnumerable<Person> sortedPeople = people!.OrderBy(p => p.Name);
+        foreach (Person person in sortedPeople!)
         {
             string owedColor = person.Owes < 0 ? "teal" : person.Owes > 0 ? "maroon" : "green";
 
