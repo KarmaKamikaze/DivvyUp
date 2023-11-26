@@ -2,9 +2,9 @@
 
 namespace DivvyUp;
 
-public class Compute
+public static class Compute
 {
-    public static void SplitCosts(List<Person>? people)
+    public static void SplitCosts(List<Person>? people, DBUtility dbUtility)
     {
         Rule rule = new Rule("[red]Compute Costs[/]");
         rule.LeftJustified();
@@ -13,7 +13,7 @@ public class Compute
 
         if (people?.Count == 0)
         {
-            AnsiConsole.MarkupLine("[maroon]Add people to the list first.[/]");
+            AnsiConsole.MarkupLine("[maroon]Add people to DivvyUp first.[/]");
             return;
         }
 
@@ -33,5 +33,7 @@ public class Compute
             person.Owes += share;
             AnsiConsole.MarkupLine($"[olive]{person.Name}[/]: [green]{share:C}[/]");
         }
+
+        dbUtility.UpdatePeopleOwes(people);
     }
 }

@@ -109,6 +109,91 @@ public class DBUtility
         return people;
     }
 
+    public void DeletePerson(int personId)
+    {
+        if (string.IsNullOrEmpty(_connectionString))
+        {
+            AnsiConsole.MarkupLine("[red]SQLite connection string not found in [olive]App.config.[/][/]");
+            return;
+        }
+
+        using SQLiteConnection connection = new SQLiteConnection(_connectionString);
+        try
+        {
+            connection.Open();
+
+            // Delete the person from the Person table
+            const string deleteQuery = "DELETE FROM Person WHERE ID = @ID";
+
+            using SQLiteCommand deleteCommand = new SQLiteCommand(deleteQuery, connection);
+            deleteCommand.Parameters.AddWithValue("@ID", personId);
+            deleteCommand.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.WriteException(ex);
+        }
+    }
+
+    public void DeleteAllPeople()
+    {
+        if (string.IsNullOrEmpty(_connectionString))
+        {
+            AnsiConsole.MarkupLine("[red]SQLite connection string not found in [olive]App.config.[/][/]");
+            return;
+        }
+
+        using SQLiteConnection connection = new SQLiteConnection(_connectionString);
+        try
+        {
+            connection.Open();
+
+            // Delete all people from the Person table
+            const string deleteAllQuery = "DELETE FROM Person";
+
+            using SQLiteCommand deleteAllCommand = new SQLiteCommand(deleteAllQuery, connection);
+            deleteAllCommand.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.WriteException(ex);
+        }
+    }
+
+    public void UpdatePeopleOwes(List<Person> people)
+    {
+        if (string.IsNullOrEmpty(_connectionString))
+        {
+            AnsiConsole.MarkupLine("[red]SQLite connection string not found in [olive]App.config.[/][/]");
+            return;
+        }
+
+        using SQLiteConnection connection = new SQLiteConnection(_connectionString);
+        connection.Open();
+        using SQLiteTransaction transaction = connection.BeginTransaction();
+        try
+        {
+            foreach (Person updatedPerson in people)
+            {
+                // Update the Owes attribute for each person in the Person table
+                const string updateQuery = "UPDATE Person SET Owes = @Owes WHERE ID = @ID";
+
+                using SQLiteCommand updateCommand = new SQLiteCommand(updateQuery, connection, transaction);
+                updateCommand.Parameters.AddWithValue("@Owes", updatedPerson.Owes);
+                updateCommand.Parameters.AddWithValue("@ID", updatedPerson.Id);
+
+                updateCommand.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+        }
+        catch (Exception ex)
+        {
+            transaction.Rollback();
+            AnsiConsole.WriteException(ex);
+        }
+    }
+
     public void CreateDB()
     {
         Directory.CreateDirectory("./Data");
