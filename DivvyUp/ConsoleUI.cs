@@ -109,6 +109,45 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
         dbUtility.UpdatePeopleOwes(owingPeople);
     }
 
+    private void SimplifyDebts()
+    {
+        List<Person> peopleFromDatabase = dbUtility.GetPeopleFromDatabase()!;
+        if (peopleFromDatabase?.Count == 0)
+        {
+            AnsiConsole.MarkupLine("[maroon]Add people to DivvyUp first.[/]");
+            return;
+        }
+
+        List<Person> positiveBalances = peopleFromDatabase!.Where(p => p.Owes > 0).OrderByDescending(p => p.Owes).ToList();
+        List<Person> negativeBalances = peopleFromDatabase!.Where(p => p.Owes < 0).OrderBy(p => p.Owes).ToList();
+
+        for (int i = 0; i < negativeBalances.Count; i++)
+        {
+            Person debtor = negativeBalances[i];
+
+            for (int j = 0; j < positiveBalances.Count; j++)
+            {
+                Person creditor = positiveBalances[j];
+
+                decimal amountToTransfer = Math.Min(Math.Abs(debtor.Owes), creditor.Owes);
+
+                debtor.Owes += amountToTransfer;
+                creditor.Owes -= amountToTransfer;
+
+                AnsiConsole.MarkupLine($"[olive][red]{creditor.Name}[/] pays [green]{amountToTransfer:C}[/] to [blue]{debtor.Name}[/][/]");
+
+                if (creditor.Owes == 0)
+                {
+                    positiveBalances.RemoveAt(j);
+                    j--;
+                }
+
+                if (debtor.Owes == 0)
+                    break;
+            }
+        }
+    }
+
     private List<Person> DeleteAllPeople()
     {
         dbUtility.DeleteAllPeople();
@@ -197,7 +236,7 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
         }
 
         IOrderedEnumerable<Person> sortedPeople = people!.OrderBy(p => p.Name);
-        foreach (Person person in sortedPeople!)
+        foreach (Person person in sortedPeople)
         {
             string owedColor = person.Owes < 0 ? "teal" : person.Owes > 0 ? "maroon" : "green";
 
@@ -206,5 +245,7 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
         }
 
         AnsiConsole.Write(table);
+
+        SimplifyDebts();
     }
 }
