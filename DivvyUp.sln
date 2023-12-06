@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DivvyUp", "DivvyUp\DivvyUp.csproj", "{80A621CA-7872-4AC6-BA8A-8544C3F003A6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DivvyUpTests", "DivvyUpTests\DivvyUpTests.csproj", "{51097AF9-6ACF-4B7A-9C29-F79A9C51657B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{80A621CA-7872-4AC6-BA8A-8544C3F003A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{80A621CA-7872-4AC6-BA8A-8544C3F003A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{80A621CA-7872-4AC6-BA8A-8544C3F003A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51097AF9-6ACF-4B7A-9C29-F79A9C51657B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51097AF9-6ACF-4B7A-9C29-F79A9C51657B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51097AF9-6ACF-4B7A-9C29-F79A9C51657B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51097AF9-6ACF-4B7A-9C29-F79A9C51657B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
