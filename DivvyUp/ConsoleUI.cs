@@ -109,22 +109,20 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
         dbUtility.UpdatePeopleOwes(owingPeople);
     }
 
-    private void SimplifyDebts()
+    private List<String> SimplifyDebts()
     {
         List<Person> peopleFromDatabase = dbUtility.GetPeopleFromDatabase()!;
         if (peopleFromDatabase?.Count == 0)
         {
-            AnsiConsole.MarkupLine("[maroon]Add people to DivvyUp first.[/]");
-            return;
+            throw new ApplicationException("No people were added to DivvyUp.");
         }
 
         List<Person> positiveBalances = peopleFromDatabase!.Where(p => p.Owes > 0).OrderByDescending(p => p.Owes).ToList();
         List<Person> negativeBalances = peopleFromDatabase!.Where(p => p.Owes < 0).OrderBy(p => p.Owes).ToList();
+        List<String> simplifiedDebtMessages = new List<string>();
 
-        for (int i = 0; i < negativeBalances.Count; i++)
+        foreach (Person debtor in negativeBalances)
         {
-            Person debtor = negativeBalances[i];
-
             for (int j = 0; j < positiveBalances.Count; j++)
             {
                 Person creditor = positiveBalances[j];
@@ -134,7 +132,7 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
                 debtor.Owes += amountToTransfer;
                 creditor.Owes -= amountToTransfer;
 
-                AnsiConsole.MarkupLine($"[olive][red]{creditor.Name}[/] pays [green]{amountToTransfer:C}[/] to [blue]{debtor.Name}[/][/]");
+                simplifiedDebtMessages.Add($"[olive][red]{creditor.Name}[/] pays [green]{amountToTransfer:C}[/] to [teal]{debtor.Name}[/][/]");
 
                 if (creditor.Owes == 0)
                 {
@@ -146,6 +144,8 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
                     break;
             }
         }
+
+        return simplifiedDebtMessages;
     }
 
     private List<Person> DeleteAllPeople()
@@ -221,16 +221,22 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
             return;
         }
 
-        Table table = new Table()
+        Table outerTable = new Table()
             .Title("DivvyUp Overview")
             .HeavyEdgeBorder()
+            .HideHeaders()
             .Centered();
 
-        table.AddColumn(new TableColumn("Name"));
-        table.AddColumn(new TableColumn("Paid"));
-        table.AddColumn(new TableColumn("Owes"));
+        outerTable.AddColumn(new TableColumn("Header"));
 
-        foreach (TableColumn column in table.Columns)
+        Table debtTable = new Table()
+            .Centered();
+
+        debtTable.AddColumn(new TableColumn("Name"));
+        debtTable.AddColumn(new TableColumn("Paid"));
+        debtTable.AddColumn(new TableColumn("Owes"));
+
+        foreach (TableColumn column in debtTable.Columns)
         {
             column.Padding(3, 3).Centered();
         }
@@ -240,12 +246,24 @@ public class ConsoleUI(List<Person>? people, DBUtility dbUtility)
         {
             string owedColor = person.Owes < 0 ? "teal" : person.Owes > 0 ? "maroon" : "green";
 
-            table.AddRow(new Markup($"[olive]{person.Name}[/]"), new Markup($"[green]{person.Paid:C}[/]"),
+            debtTable.AddRow(new Markup($"[olive]{person.Name}[/]"), new Markup($"[green]{person.Paid:C}[/]"),
                 new Markup($"[{owedColor}]{person.Owes:C}[/]"));
         }
 
-        AnsiConsole.Write(table);
+        outerTable.AddRow(debtTable);
 
-        SimplifyDebts();
+        Table paymentTable = new Table()
+            .Centered();
+
+        paymentTable.AddColumn(new TableColumn("DivvyUp").Padding(3, 3).Centered());
+
+        foreach (string message in SimplifyDebts())
+        {
+            paymentTable.AddRow(new Markup(message));
+        }
+
+        outerTable.AddRow(paymentTable);
+
+        AnsiConsole.Write(outerTable);
     }
 }
